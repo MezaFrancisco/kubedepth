@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KubeDepth — Production Kubernetes. Real Depth.</title>
+  <meta name="description" content="Production Kubernetes and cloud security from an engineer who actually builds the infrastructure. YouTube channel launching soon — get notified first.">
+  <meta property="og:title" content="KubeDepth — Production Kubernetes. Real Depth.">
+  <meta property="og:description" content="Real content from real production. Kubernetes reliability, GitOps, cost optimization, and security from 12+ years in the terminal.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    /* ============================================================
+       TOKENS
+    ============================================================ */
+    :root {
+      --bg-0:  #04040a;
+      --bg-1:  #07070f;
+      --bg-2:  #0c0c1e;
+      --bg-3:  #10102a;
+      --bg-4:  #141436;
+
+      --indigo:       #818cf8;
+      --indigo-dim:   rgba(129,140,248,0.10);
+      --indigo-glow:  rgba(129,140,248,0.30);
+      --indigo-pale:  rgba(129,140,248,0.05);
+      --indigo-line:  rgba(129,140,248,0.16);
+      --indigo-dark:  #6366f1;
+
+      --green:     #34d399;
+      --green-dim: rgba(52,211,153,0.10);
+
+      --txt-1: #eeeef5;
+      --txt-2: #7878a0;
+      --txt-3: #3a3a58;
+
+      --line:       rgba(255,255,255,0.06);
+      --line-h:     rgba(255,255,255,0.10);
+
+      --nav-h: 68px;
+      --r:     3px;
+
+      --f-disp: 'Bebas Neue', sans-serif;
+      --f-mono: 'JetBrains Mono', monospace;
+      --f-body: 'Inter', sans-serif;
+
+      --ease: cubic-bezier(0.25,0.46,0.45,0.94);
+      --t:    0.25s;
+      --ts:   0.50s;
+    }
+
+    /* ============================================================
+       RESET
+    ============================================================ */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-0);
+      color: var(--txt-1);
+      font-family: var(--f-body);
+      font-weight: 400;
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+    ::selection { background: var(--indigo-dim); color: var(--indigo); }
+    a { text-decoration: none; }
+
+    /* ============================================================
+       NAV
+    ============================================================ */
+    nav {
+      position: fixed; top:0; left:0; right:0; z-index:900;
+      height: var(--nav-h);
+      display: flex; align-items: center;
+      padding: 0 52px;
+      transition: background var(--t) var(--ease), border-color var(--t);
+      border-bottom: 1px solid transparent;
+    }
+    nav.scrolled {
+      background: rgba(4,4,10,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-color: var(--line);
+    }
+    .nav-inner {
+      width:100%; max-width:1300px; margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+
+    /* Logo */
+    .logo { display:flex; align-items:center; gap:10px; }
+    .logo-word {
+      font-family: var(--f-mono); font-weight:700;
+      letter-spacing:0.04em; display:flex;
+    }
+    .logo-kube  { color: var(--txt-1); }
+    .logo-depth { color: var(--indigo); }
+
+    /* Nav links */
+    .nav-links { display:flex; align-items:center; gap:24px; }
+    .nav-links a {
+      font-family:var(--f-mono); font-size:11px; font-weight:500;
+      letter-spacing:0.14em; text-transform:uppercase;
+      color:var(--txt-2); display:flex; align-items:center; gap:7px;
+      transition:color var(--t);
+    }
+    .nav-links a:hover { color:var(--indigo); }
+    .nav-links a i { font-size:14px; }
+    .nav-cta {
+      font-family:var(--f-mono); font-size:11px; font-weight:700;
+      letter-spacing:0.14em; text-transform:uppercase;
+      color:var(--indigo); border:1px solid var(--indigo-line);
+      padding:8px 20px; border-radius:var(--r);
+      transition: background var(--t), box-shadow var(--t);
+    }
+    .nav-cta:hover {
+      background: var(--indigo-dim);
+      box-shadow: 0 0 20px var(--indigo-pale);
+      color: var(--indigo) !important;
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    #hero {
+      position:relative; min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding: calc(var(--nav-h) + 40px) 52px 80px;
+      overflow:hidden;
+    }
+    #hero-canvas { position:absolute; inset:0; z-index:0; }
+    .hero-vignette {
+      position:absolute; inset:0; z-index:1;
+      background:
+        radial-gradient(ellipse 90% 55% at 50% -5%, rgba(129,140,248,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 55% 45% at 10% 60%, rgba(129,140,248,0.04) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 40% at 50% 105%, rgba(4,4,10,0.9) 0%, transparent 55%);
+    }
+
+    .hero-inner {
+      position:relative; z-index:2;
+      width:100%; max-width:1300px; margin:0 auto;
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:72px; align-items:center;
+    }
+
+    /* --- Hero Left --- */
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:9px;
+      font-family:var(--f-mono); font-size:10px; font-weight:600;
+      letter-spacing:0.2em; text-transform:uppercase;
+      color:var(--green);
+      border:1px solid rgba(52,211,153,0.22);
+      background:var(--green-dim);
+      padding:7px 14px; border-radius:100px;
+      margin-bottom:30px;
+      opacity:0; animation:rise 0.7s var(--ease) forwards 0.1s;
+    }
+    .badge-dot {
+      width:6px; height:6px; background:var(--green); border-radius:50%;
+      animation:dotPulse 2s ease infinite;
+    }
+    @keyframes dotPulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.35; transform:scale(0.65); }
+    }
+
+    .hero-title {
+      font-family:var(--f-disp);
+      line-height:0.87; letter-spacing:0.01em;
+      margin-bottom:28px;
+      opacity:0; animation:rise 0.8s var(--ease) forwards 0.25s;
+    }
+    .hero-title .t1 {
+      display:block;
+      font-size:clamp(52px, 7.5vw, 108px);
+      color:var(--txt-1);
+    }
+    .hero-title .t2 {
+      display:block;
+      font-size:clamp(52px, 7.5vw, 108px);
+      color:var(--indigo);
+      text-shadow:0 0 70px var(--indigo-glow), 0 0 140px rgba(129,140,248,0.10);
+    }
+    .hero-title .t3 {
+      display:block;
+      font-size:clamp(22px, 3.2vw, 46px);
+      color:var(--txt-3); letter-spacing:0.05em; margin-top:6px;
+    }
+
+    .hero-tagline {
+      font-size:15px; font-weight:400; color:var(--txt-2);
+      line-height:1.72; margin-bottom:12px; max-width:480px;
+      opacity:0; animation:rise 0.8s var(--ease) forwards 0.38s;
+    }
+    .hero-desc {
+      font-size:14px; font-weight:300; color:var(--txt-3);
+      line-height:1.78; margin-bottom:40px; max-width:460px;
+      opacity:0; animation:rise 0.8s var(--ease) forwards 0.48s;
+    }
+
+    .hero-stats {
+      display:flex; flex-wrap:wrap; gap:20px 36px;
+      opacity:0; animation:rise 0.8s var(--ease) forwards 0.58s;
+    }
+    .hs { display:flex; flex-direction:column; gap:3px; }
+    .hs-val {
+      font-family:var(--f-mono); font-size:14px; font-weight:700;
+      color:var(--indigo);
+    }
+    .hs-label {
+      font-family:var(--f-mono); font-size:9px; font-weight:500;
+      letter-spacing:0.16em; text-transform:uppercase; color:var(--txt-3);
+    }
+
+    /* --- Hero Right: Form --- */
+    .hero-form-wrap {
+      background:rgba(255,255,255,0.02);
+      border:1px solid var(--indigo-line);
+      padding:40px 38px; border-radius:4px;
+      position:relative; overflow:hidden;
+      opacity:0; animation:rise 0.8s var(--ease) forwards 0.32s;
+    }
+    .hero-form-wrap::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg, transparent 0%, var(--indigo) 40%, rgba(129,140,248,0.4) 100%);
+      opacity:0.55;
+    }
+
+    .form-head { margin-bottom:28px; }
+    .form-head-eyebrow {
+      font-family:var(--f-mono); font-size:9px; font-weight:600;
+      letter-spacing:0.24em; text-transform:uppercase; color:var(--indigo);
+      display:block; margin-bottom:8px;
+    }
+    .form-head-title {
+      font-family:var(--f-disp); font-size:30px; color:var(--txt-1);
+      line-height:1;
+    }
+    .form-head-sub {
+      font-size:13px; font-weight:300; color:var(--txt-2);
+      margin-top:9px; line-height:1.65;
+    }
+
+    /* Fields */
+    .form-row  { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .form-full { margin-bottom:12px; }
+    .fg { display:flex; flex-direction:column; gap:5px; }
+    .fl {
+      font-family:var(--f-mono); font-size:9px; font-weight:600;
+      letter-spacing:0.18em; text-transform:uppercase; color:var(--txt-3);
+    }
+    .fi, .ft {
+      background:rgba(255,255,255,0.025);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      padding:11px 14px;
+      font-family:var(--f-body); font-size:14px;
+      color:var(--txt-1); outline:none; width:100%;
+      transition:border-color var(--t), box-shadow var(--t);
+    }
+    .fi::placeholder, .ft::placeholder { color:var(--txt-3); font-size:13px; }
+    .fi:focus, .ft:focus {
+      border-color:rgba(129,140,248,0.38);
+      box-shadow:0 0 0 3px rgba(129,140,248,0.07);
+    }
+    .ft { resize:vertical; min-height:82px; }
+
+    /* Submit */
+    .btn-submit {
+      width:100%; padding:14px 20px; margin-top:8px;
+      background:var(--indigo); color:var(--bg-0);
+      border:none; border-radius:var(--r);
+      font-family:var(--f-mono); font-size:11px; font-weight:700;
+      letter-spacing:0.15em; text-transform:uppercase;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      transition:background var(--t), box-shadow var(--t), transform var(--t);
+      position:relative; overflow:hidden;
+    }
+    .btn-submit::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg, rgba(255,255,255,0.16) 0%, transparent 50%);
+      opacity:0; transition:opacity var(--t);
+    }
+    .btn-submit:hover {
+      background:#9699fa;
+      box-shadow:0 0 32px var(--indigo-glow), 0 8px 24px rgba(129,140,248,0.22);
+      transform:translateY(-1px);
+    }
+    .btn-submit:hover::before { opacity:1; }
+    .btn-submit:disabled { opacity:0.55; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    /* Success state */
+    .form-success {
+      display:none;
+      flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:48px 20px; gap:18px;
+      min-height:320px;
+    }
+    .form-success.show { display:flex; }
+    .success-ring {
+      width:72px; height:72px; border-radius:50%;
+      border:1px solid var(--indigo-line);
+      background:var(--indigo-dim);
+      display:flex; align-items:center; justify-content:center;
+      font-size:28px; color:var(--indigo);
+    }
+    .success-title {
+      font-family:var(--f-disp); font-size:38px; color:var(--txt-1); line-height:1;
+    }
+    .success-sub {
+      font-size:14px; font-weight:300; color:var(--txt-2);
+      max-width:260px; line-height:1.72;
+    }
+
+    /* ============================================================
+       SECTIONS SHARED
+    ============================================================ */
+    section { padding:120px 52px; }
+    .wrap { max-width:1300px; margin:0 auto; }
+
+    .stag {
+      display:inline-flex; align-items:center; gap:10px;
+      font-family:var(--f-mono); font-size:9px; font-weight:600;
+      letter-spacing:0.24em; text-transform:uppercase; color:var(--indigo);
+      margin-bottom:16px;
+    }
+    .stag::before {
+      content:''; display:block; width:22px; height:1px;
+      background:var(--indigo); opacity:0.45;
+    }
+    .stitle {
+      font-family:var(--f-disp);
+      font-size:clamp(44px, 5.5vw, 80px);
+      line-height:0.9; color:var(--txt-1);
+    }
+
+    /* Dot grid texture */
+    .dot-bg {
+      background-image: radial-gradient(rgba(129,140,248,0.07) 1px, transparent 1px);
+      background-size:30px 30px;
+    }
+
+    /* ============================================================
+       CONTENT PREVIEW
+    ============================================================ */
+    #content {
+      background:var(--bg-1); position:relative;
+    }
+    #content::before {
+      content:''; display:block;
+      position:absolute; top:0; left:0; right:0; height:1px;
+      background:linear-gradient(90deg, transparent, var(--indigo), transparent);
+      opacity:0.14;
+    }
+
+    .content-head { margin-bottom:56px; }
+    .content-sub {
+      font-size:16px; font-weight:300; color:var(--txt-2);
+      margin-top:18px; max-width:540px; line-height:1.78;
+    }
+
+    .cg {
+      display:grid; grid-template-columns:repeat(2,1fr);
+      gap:1px; background:var(--line); border:1px solid var(--line);
+    }
+
+    .cc {
+      background:var(--bg-1); padding:52px 44px;
+      display:flex; flex-direction:column; gap:20px;
+      position:relative; overflow:hidden;
+      transition:background var(--t);
+    }
+    .cc::after {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse at top left, rgba(129,140,248,0.07) 0%, transparent 65%);
+      opacity:0; transition:opacity var(--ts);
+    }
+    .cc:hover { background:var(--bg-2); }
+    .cc:hover::after { opacity:1; }
+
+    .cc-top { display:flex; align-items:flex-start; justify-content:space-between; }
+    .cc-icon {
+      width:48px; height:48px; border:1px solid var(--line);
+      display:flex; align-items:center; justify-content:center;
+      color:var(--txt-3); font-size:20px;
+      transition:border-color var(--t), color var(--t), transform var(--ts) var(--ease);
+    }
+    .cc:hover .cc-icon { border-color:var(--indigo-line); color:var(--indigo); transform:scale(1.04); }
+    .cc-num {
+      font-family:var(--f-mono); font-size:10px; font-weight:700;
+      letter-spacing:0.14em; color:var(--txt-3);
+      transition:color var(--t);
+    }
+    .cc:hover .cc-num { color:var(--indigo); }
+
+    .cc-title {
+      font-size:19px; font-weight:600; color:var(--txt-1); line-height:1.25;
+    }
+
+    .cc-tags { display:flex; flex-wrap:wrap; gap:6px; }
+    .cc-tag {
+      font-family:var(--f-mono); font-size:9px; font-weight:600;
+      letter-spacing:0.12em; text-transform:uppercase;
+      color:var(--txt-3); border:1px solid var(--line);
+      padding:4px 10px; border-radius:2px;
+      transition:border-color var(--t), color var(--t);
+    }
+    .cc:hover .cc-tag { border-color:var(--indigo-line); color:var(--txt-2); }
+
+    .cc-desc {
+      font-size:14px; font-weight:300; color:var(--txt-2); line-height:1.78;
+    }
+
+    /* ============================================================
+       ABOUT
+    ============================================================ */
+    #about { background:var(--bg-0); }
+
+    .about-grid {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:100px; align-items:center;
+    }
+
+    .about-eyebrow { margin-bottom:16px; }
+    .about-quote {
+      font-family:var(--f-disp); font-size:clamp(30px, 4vw, 56px);
+      color:var(--txt-1); line-height:1.02; margin-top:18px;
+    }
+    .about-quote .aq { color:var(--indigo); }
+    .about-body {
+      font-size:16px; font-weight:300; color:var(--txt-2);
+      line-height:1.85; margin-top:32px;
+    }
+    .about-body p+p { margin-top:18px; }
+    .about-body strong { color:var(--txt-1); font-weight:500; }
+
+    .stat-grid {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:1px; background:var(--line); border:1px solid var(--line);
+    }
+    .sg {
+      background:var(--bg-0); padding:36px 30px;
+      display:flex; flex-direction:column; gap:6px;
+      transition:background var(--t);
+    }
+    .sg:hover { background:var(--bg-2); }
+    .sg-val {
+      font-family:var(--f-disp); font-size:52px; line-height:1;
+      color:var(--indigo);
+      text-shadow:0 0 28px var(--indigo-glow);
+    }
+    .sg-label {
+      font-family:var(--f-mono); font-size:9px; font-weight:600;
+      letter-spacing:0.16em; text-transform:uppercase; color:var(--txt-3);
+    }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      background:var(--bg-0); border-top:1px solid var(--line);
+      padding:32px 52px;
+    }
+    .foot-inner {
+      max-width:1300px; margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:18px;
+    }
+    .foot-copy {
+      font-family:var(--f-mono); font-size:10px;
+      letter-spacing:0.08em; color:var(--txt-3);
+    }
+    .foot-links { display:flex; gap:24px; flex-wrap:wrap; }
+    .foot-links a {
+      font-family:var(--f-mono); font-size:10px;
+      letter-spacing:0.10em; text-transform:uppercase;
+      color:var(--txt-3); display:flex; align-items:center; gap:7px;
+      transition:color var(--t);
+    }
+    .foot-links a i { font-size:13px; }
+    .foot-links a:hover { color:var(--indigo); }
+
+    /* ============================================================
+       SCROLL REVEAL
+    ============================================================ */
+    .sr { opacity:0; transform:translateY(22px); transition:opacity 0.65s var(--ease), transform 0.65s var(--ease); }
+    .sr.in { opacity:1; transform:translateY(0); }
+    .d1 { transition-delay:0.10s; }
+    .d2 { transition-delay:0.20s; }
+    .d3 { transition-delay:0.30s; }
+    .d4 { transition-delay:0.40s; }
+
+    /* ============================================================
+       KEYFRAMES
+    ============================================================ */
+    @keyframes rise {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width:1100px) {
+      .hero-inner { grid-template-columns:1fr; gap:52px; }
+      .hero-left  { max-width:600px; }
+      .about-grid { grid-template-columns:1fr; gap:60px; }
+      .cg         { grid-template-columns:1fr; }
+    }
+
+    @media (max-width:768px) {
+      section { padding:80px 24px; }
+      nav, footer { padding-left:24px; padding-right:24px; }
+      #hero { padding:calc(var(--nav-h) + 32px) 24px 64px; }
+      .form-row { grid-template-columns:1fr; }
+      .hero-form-wrap { padding:30px 24px; }
+      .foot-inner { flex-direction:column; align-items:flex-start; }
+      .stat-grid  { grid-template-columns:1fr 1fr; }
+      .nav-links .nav-social-text { display:none; }
+    }
+
+    @media (max-width:480px) {
+      .hero-stats { gap:16px 24px; }
+      .stat-grid  { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+============================================================ -->
+<nav id="nav">
+  <div class="nav-inner">
+    <!-- Logo -->
+    <a href="#" class="logo">
+      <svg viewBox="0 0 44 44" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Outer flat-top hexagon -->
+        <polygon points="40,22 31,37.6 13,37.6 4,22 13,6.4 31,6.4"
+                 stroke="#818cf8" stroke-width="1.5" fill="none"/>
+        <!-- Inner pointy-top hexagon (rotated 30°) -->
+        <polygon points="22,12 30.66,17 30.66,27 22,32 13.34,27 13.34,17"
+                 stroke="#818cf8" stroke-width="1" fill="none" opacity="0.45"/>
+        <!-- Depth connection lines -->
+        <line x1="40"   y1="22"   x2="30.66" y2="22"   stroke="#818cf8" stroke-width="0.7" opacity="0.22"/>
+        <line x1="4"    y1="22"   x2="13.34" y2="22"   stroke="#818cf8" stroke-width="0.7" opacity="0.22"/>
+        <line x1="13"   y1="6.4"  x2="13.34" y2="17"   stroke="#818cf8" stroke-width="0.7" opacity="0.22"/>
+        <line x1="31"   y1="6.4"  x2="30.66" y2="17"   stroke="#818cf8" stroke-width="0.7" opacity="0.22"/>
+        <line x1="13"   y1="37.6" x2="13.34" y2="27"   stroke="#818cf8" stroke-width="0.7" opacity="0.22"/>
+        <line x1="31"   y1="37.6" x2="30.66" y2="27"   stroke="#818cf8" stroke-width="0.7" opacity="0.22"/>
+        <!-- Center node -->
+        <circle cx="22" cy="22" r="2.5" fill="#818cf8" opacity="0.9"/>
+      </svg>
+      <div class="logo-word" style="font-size:15px;">
+        <span class="logo-kube">KUBE</span><span class="logo-depth">DEPTH</span>
+      </div>
+    </a>
+
+    <!-- Nav right -->
+    <div class="nav-links">
+      <a href="#" aria-label="YouTube Channel">
+        <i class="fab fa-youtube"></i>
+        <span class="nav-social-text">YouTube</span>
+      </a>
+      <a href="#" aria-label="X / Twitter">
+        <i class="fab fa-x-twitter"></i>
+        <span class="nav-social-text">@KubeDepth</span>
+      </a>
+      <a href="#hero-form" class="nav-cta">Get Notified</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-vignette"></div>
+
+  <div class="hero-inner">
+
+    <!-- Left: Headline & Copy -->
+    <div class="hero-left">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        YouTube Channel &nbsp;·&nbsp; Launching Soon
+      </div>
+
+      <h1 class="hero-title">
+        <span class="t1">PRODUCTION</span>
+        <span class="t2">KUBERNETES</span>
+        <span class="t3">.DEEP</span>
+      </h1>
+
+      <p class="hero-tagline">
+        Production Kubernetes and cloud security — from an engineer who builds the infrastructure, not just talks about it.
+      </p>
+
+      <p class="hero-desc">
+        Real content from real production environments. No theory, no toy examples.
+        Kubernetes reliability, GitOps, security, and cost optimization from someone who's actually done it.
+      </p>
+
+      <div class="hero-stats">
+        <div class="hs">
+          <span class="hs-val">12+ yrs</span>
+          <span class="hs-label">Production Infra</span>
+        </div>
+        <div class="hs">
+          <span class="hs-val">$1M+</span>
+          <span class="hs-label">Cloud Savings</span>
+        </div>
+        <div class="hs">
+          <span class="hs-val">30+</span>
+          <span class="hs-label">K8s Clusters</span>
+        </div>
+        <div class="hs">
+          <span class="hs-val">Q3 2026</span>
+          <span class="hs-label">Launch Target</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Email Capture Form -->
+    <div class="hero-form-wrap" id="hero-form">
+      <!-- Form -->
+      <div id="form-container">
+        <div class="form-head">
+          <span class="form-head-eyebrow">Early Access</span>
+          <h2 class="form-head-title">Get Notified First</h2>
+          <p class="form-head-sub">One email when the channel goes live. No newsletters, no drip sequences — just the launch notification.</p>
+        </div>
+
+        <form id="notify-form" action="https://api.web3forms.com/submit" method="POST" novalidate>
+          <input type="hidden" name="access_key" value="e17e5ad6-163e-4894-bc0a-de3b3ac22f67">
+          <input type="hidden" name="subject" value="KubeDepth — New Early Access Signup">
+          <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
+
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl" for="f-name">Name</label>
+              <input type="text" id="f-name" name="name" class="fi" placeholder="Your name" required>
+            </div>
+            <div class="fg">
+              <label class="fl" for="f-email">Email</label>
+              <input type="email" id="f-email" name="email" class="fi" placeholder="you@company.com" required>
+            </div>
+          </div>
+
+          <div class="form-full fg">
+            <label class="fl" for="f-msg">Your Biggest Kubernetes Challenge</label>
+            <textarea id="f-msg" name="message" class="ft" rows="3"
+              placeholder="What's breaking, too expensive, or keeping you up at night? (helps me prioritize content)" required></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit" id="submit-btn">
+            <i class="fas fa-arrow-right"></i>
+            Notify Me When We Launch
+          </button>
+        </form>
+      </div>
+
+      <!-- Success State -->
+      <div class="form-success" id="form-success">
+        <div class="success-ring">
+          <i class="fas fa-check"></i>
+        </div>
+        <h3 class="success-title">You're In.</h3>
+        <p class="success-sub">
+          You'll be the first to know when KubeDepth goes live.
+          Watch your inbox.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTENT PREVIEW
+============================================================ -->
+<section id="content" class="dot-bg">
+  <div class="wrap">
+    <div class="content-head sr">
+      <div class="stag">What You'll Learn</div>
+      <h2 class="stitle">Four Series.<br>Zero Fluff.</h2>
+      <p class="content-sub">
+        Each series covers one domain with real depth — not surface-level tutorials, but the production patterns
+        that keep systems running and AWS bills under control.
+      </p>
+    </div>
+
+    <div class="cg">
+      <div class="cc sr">
+        <div class="cc-top">
+          <div class="cc-icon"><i class="fas fa-server"></i></div>
+          <span class="cc-num">Series 01</span>
+        </div>
+        <h3 class="cc-title">Kubernetes Reliability &amp; Stability</h3>
+        <div class="cc-tags">
+          <span class="cc-tag">Karpenter</span>
+          <span class="cc-tag">Node Lifecycle</span>
+          <span class="cc-tag">Alert Rules</span>
+          <span class="cc-tag">OOMKills</span>
+          <span class="cc-tag">CrashLoopBackOff</span>
+        </div>
+        <p class="cc-desc">
+          Karpenter consolidation behavior, node lifecycle alerting, GitLab Runner reliability in Kubernetes —
+          the failure modes production SREs actually debug at 3am, not the ones in the docs.
+        </p>
+      </div>
+
+      <div class="cc sr d1">
+        <div class="cc-top">
+          <div class="cc-icon"><i class="fas fa-code-branch"></i></div>
+          <span class="cc-num">Series 02</span>
+        </div>
+        <h3 class="cc-title">GitOps in Production</h3>
+        <div class="cc-tags">
+          <span class="cc-tag">ArgoCD</span>
+          <span class="cc-tag">GitLab CI</span>
+          <span class="cc-tag">Multi-Cluster</span>
+          <span class="cc-tag">Terraform</span>
+          <span class="cc-tag">EKS</span>
+        </div>
+        <p class="cc-desc">
+          Multi-cluster ArgoCD that actually scales, GitLab CI patterns that don't fall apart under load,
+          EKS with Terraform built for real teams — not just the happy path.
+        </p>
+      </div>
+
+      <div class="cc sr d2">
+        <div class="cc-top">
+          <div class="cc-icon"><i class="fas fa-chart-line"></i></div>
+          <span class="cc-num">Series 03</span>
+        </div>
+        <h3 class="cc-title">AWS &amp; EKS Cost Optimization</h3>
+        <div class="cc-tags">
+          <span class="cc-tag">Spot Instances</span>
+          <span class="cc-tag">Karpenter</span>
+          <span class="cc-tag">EBS Cleanup</span>
+          <span class="cc-tag">NAT Gateway</span>
+          <span class="cc-tag">Right-Sizing</span>
+        </div>
+        <p class="cc-desc">
+          How to cut your AWS bill — $350K/year in savings using Karpenter spot scheduling, dangling EBS volume
+          cleanup, and right-sizing. Actual dollar amounts, not vague percentages.
+        </p>
+      </div>
+
+      <div class="cc sr d3">
+        <div class="cc-top">
+          <div class="cc-icon"><i class="fas fa-shield-halved"></i></div>
+          <span class="cc-num">Series 04</span>
+        </div>
+        <h3 class="cc-title">DevSecOps</h3>
+        <div class="cc-tags">
+          <span class="cc-tag">EKS Hardening</span>
+          <span class="cc-tag">RBAC</span>
+          <span class="cc-tag">Network Policy</span>
+          <span class="cc-tag">Compliance</span>
+          <span class="cc-tag">Pod Security</span>
+        </div>
+        <p class="cc-desc">
+          EKS cluster hardening, network policy enforcement, RBAC patterns that hold up under audit —
+          blue-team security from an engineer who builds and secures the same infrastructure.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABOUT STRIP
+============================================================ -->
+<section id="about">
+  <div class="wrap">
+    <div class="about-grid">
+
+      <div class="about-left sr">
+        <div class="about-eyebrow">
+          <div class="stag">The Engineer</div>
+        </div>
+        <h2 class="about-quote">
+          Been in the<br>
+          <span class="aq">terminal,</span><br>
+          not the slides.
+        </h2>
+        <div class="about-body">
+          <p>
+            12 years in production infrastructure. Staff DevOps/DevSecOps engineer operating AWS and
+            Kubernetes at scale — 30+ clusters across EKS and self-hosted K8s, $1M+ in documented cloud savings, and the
+            incident postmortems to back it up.
+          </p>
+          <p>
+            KubeDepth is built on one principle: the best DevOps content comes from engineers who are
+            still in the weeds. Not from people who left production five years ago to become full-time
+            content creators. <strong>This is real work, turned into real content.</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="about-right sr d2">
+        <div class="stat-grid">
+          <div class="sg">
+            <span class="sg-val">$1M+</span>
+            <span class="sg-label">Cloud Savings</span>
+          </div>
+          <div class="sg">
+            <span class="sg-val">30+</span>
+            <span class="sg-label">K8s Clusters</span>
+          </div>
+          <div class="sg">
+            <span class="sg-val">12</span>
+            <span class="sg-label">Years In Prod</span>
+          </div>
+          <div class="sg">
+            <span class="sg-val">∞</span>
+            <span class="sg-label">Incidents Survived</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+  <div class="foot-inner">
+    <a href="#" class="logo">
+      <svg viewBox="0 0 44 44" width="24" height="24" fill="none" aria-hidden="true">
+        <polygon points="40,22 31,37.6 13,37.6 4,22 13,6.4 31,6.4"
+                 stroke="#818cf8" stroke-width="1.5" fill="none" opacity="0.65"/>
+        <polygon points="22,12 30.66,17 30.66,27 22,32 13.34,27 13.34,17"
+                 stroke="#818cf8" stroke-width="1" fill="none" opacity="0.3"/>
+        <circle cx="22" cy="22" r="2" fill="#818cf8" opacity="0.55"/>
+      </svg>
+      <div class="logo-word" style="font-size:13px;">
+        <span class="logo-kube">KUBE</span><span class="logo-depth">DEPTH</span>
+      </div>
+    </a>
+
+    <p class="foot-copy">MezaForge LLC &copy; 2026 &mdash; All rights reserved.</p>
+
+    <div class="foot-links">
+      <a href="mailto:frank@kubedepth.com"><i class="fas fa-envelope"></i> frank@kubedepth.com</a>
+      <a href="#"><i class="fab fa-youtube"></i> YouTube</a>
+      <a href="#"><i class="fab fa-x-twitter"></i> @KubeDepth</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── NAV ──────────────────────────────────────────────── */
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+
+  /* ── CANVAS — CLUSTER NODE GRAPH ─────────────────────── */
+  const canvas = document.getElementById('hero-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W = 0, H = 0;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const NODE_COUNT = 58;
+  const EDGE_DIST  = 155;
+  const nodes = [];
+
+  class Node {
+    constructor(scatter) {
+      this.reset(scatter !== false);
+    }
+    reset(scatter) {
+      this.x     = scatter ? Math.random() * W : (Math.random() < 0.5 ? -8 : W + 8);
+      this.y     = scatter ? Math.random() * H : Math.random() * H;
+      this.vx    = (Math.random() - 0.5) * 0.38;
+      this.vy    = (Math.random() - 0.5) * 0.38;
+      this.r     = Math.random() * 1.8 + 0.5;
+      this.phase = Math.random() * Math.PI * 2;
+      this.spd   = 0.012 + Math.random() * 0.014;
+      this.ctrl  = Math.random() > 0.80; // control-plane nodes — brighter
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.phase += this.spd;
+      if (this.x < -24) this.x = W + 24;
+      if (this.x > W + 24) this.x = -24;
+      if (this.y < -24) this.y = H + 24;
+      if (this.y > H + 24) this.y = -24;
+    }
+    draw() {
+      const pulse = 0.5 + Math.sin(this.phase) * 0.5;
+      const alpha = this.ctrl
+        ? 0.50 * pulse + 0.18
+        : 0.22 * pulse + 0.07;
+      const rad = this.r + (this.ctrl ? 0.7 : 0);
+
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, rad, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(129,140,248,${alpha})`;
+      ctx.fill();
+
+      if (this.ctrl) {
+        // Soft glow ring for control-plane nodes
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, rad * 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(129,140,248,${0.032 * pulse})`;
+        ctx.fill();
+      }
+    }
+  }
+
+  for (let i = 0; i < NODE_COUNT; i++) nodes.push(new Node(true));
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw edges
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx   = nodes[j].x - nodes[i].x;
+        const dy   = nodes[j].y - nodes[i].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < EDGE_DIST) {
+          const a = (1 - dist / EDGE_DIST) * 0.085;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = `rgba(129,140,248,${a})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    nodes.forEach(n => { n.update(); n.draw(); });
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  /* ── SCROLL REVEAL ────────────────────────────────────── */
+  const srObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); srObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -48px 0px' });
+  document.querySelectorAll('.sr').forEach(el => srObs.observe(el));
+
+  /* ── FORM ─────────────────────────────────────────────── */
+  const form       = document.getElementById('notify-form');
+  const submitBtn  = document.getElementById('submit-btn');
+  const formCont   = document.getElementById('form-container');
+  const formSuccess = document.getElementById('form-success');
+  const origLabel  = '<i class="fas fa-arrow-right"></i> Notify Me When We Launch';
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
+    submitBtn.disabled  = true;
+
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      body: new FormData(form)
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        formCont.style.display = 'none';
+        formSuccess.classList.add('show');
+      } else {
+        throw new Error('submission failed');
+      }
+    })
+    .catch(() => {
+      submitBtn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Try Again';
+      submitBtn.style.background = '#ef4444';
+      submitBtn.disabled = false;
+      setTimeout(() => {
+        submitBtn.innerHTML = origLabel;
+        submitBtn.style.background = '';
+      }, 3200);
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
